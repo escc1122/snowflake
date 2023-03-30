@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+	"time"
 )
 
 //******************************************************************************
@@ -23,6 +24,42 @@ func TestGenerateDuplicateID(t *testing.T) {
 		}
 		x = y
 	}
+}
+
+func TestGenerateDuplicateIDStepFix(t *testing.T) {
+	cache := make(map[ID]string)
+	node, _ := NewNode(1)
+
+	now := time.Since(node.epoch).Nanoseconds() / 1000000
+
+	var y ID
+	for i := 0; i < 1000000; i++ {
+		y = node.generateStepFix(now)
+
+		if _, ok := cache[y]; ok {
+			t.Errorf("y(%d) are the same", y)
+		}
+		cache[y] = ""
+	}
+
+	for i := 0; i < 1000000; i++ {
+		y = node.generateStepFix(now - 2)
+
+		if _, ok := cache[y]; ok {
+			t.Errorf("y(%d) are the same", y)
+		}
+		cache[y] = ""
+	}
+
+	for i := 0; i < 1000000; i++ {
+		y = node.Generate()
+
+		if _, ok := cache[y]; ok {
+			t.Errorf("y(%d) are the same", y)
+		}
+		cache[y] = ""
+	}
+
 }
 
 // I feel like there's probably a better way

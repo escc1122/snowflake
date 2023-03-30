@@ -137,15 +137,20 @@ func (n *Node) Generate() ID {
 	n.mu.Lock()
 
 	now := time.Since(n.epoch).Nanoseconds() / 1000000
+	r := n.generateStepFix(now)
 
-	if now == n.time {
+	n.mu.Unlock()
+	return r
+}
+
+func (n *Node) generateStepFix(now int64) ID {
+	if now <= n.time {
 		n.step = (n.step + 1) & n.stepMask
 
 		if n.step == 0 {
-			for now <= n.time {
-				now = time.Since(n.epoch).Nanoseconds() / 1000000
-			}
+			n.time = n.time + 1
 		}
+		now = n.time
 	} else {
 		n.step = 0
 	}
@@ -156,8 +161,6 @@ func (n *Node) Generate() ID {
 		(n.node << n.nodeShift) |
 		(n.step),
 	)
-
-	n.mu.Unlock()
 	return r
 }
 
